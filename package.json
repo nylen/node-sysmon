@@ -1,0 +1,44 @@
+{
+    "name"        : "sysmon",
+    "author"      : "James Nylen <jnylen@gmail.com>",
+    "description" : "Node.js system monitoring tool to insert metrics into Graphite.",
+    "version"     : "0.0.1",
+    "repository"  : {
+        "type" : "git",
+        "url"  : "https://github.com/nylen/sysmon"
+    },
+    "bugs" : {
+        "url" : "https://github.com/nylen/sysmon/issues"
+    },
+    "license"  : "MIT",
+    "keywords" : [
+        "graphite",
+        "system",
+        "monitoring",
+        "metrics"
+    ],
+    "scripts" : {
+        "start" : "node server.js",
+        "test"  : "node node_modules/.bin/mocha"
+    },
+    "devDependencies" : {
+        "mocha"  : "~1.12.0",
+        "should" : "~1.2.2"
+    },
+    "bin" : {
+        "sysmon" : "bin/sysmon.js"
+    },
+    "dependencies" : {
+        "ansi"      : "~0.3.0",
+        "async"     : "~0.9.0",
+        "chronolog" : "0.0.1",
+        "clone"     : "~0.1.18",
+        "config"    : "~1.7.0",
+        "filesize"  : "~2.0.4",
+        "graphite"  : "0.0.6",
+        "js-yaml"   : "~3.2.2",
+        "split"     : "~0.3.1",
+        "statvfs"   : "~2.1.0",
+        "sysconf"   : "~0.1.0"
+    }
+}
