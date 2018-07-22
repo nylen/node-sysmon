@@ -23,7 +23,9 @@ var hostname   = os.hostname(),
     clockHz    = sysconf.get(sysconf._SC_CLK_TCK),
     log        = chronolog(console);
 
+var graphiteDebug = config.graphite && config.graphite.debug;
 var graphiteClient = (
+    !graphiteDebug &&
     config.graphite &&
     config.graphite.carbon &&
     graphite.createClient(config.graphite.carbon.url)
@@ -163,7 +165,13 @@ function sendMetrics(metrics, cb) {
         data = metrics;
     }
 
-    if (graphiteClient) {
+    if (graphiteDebug) {
+        var dataFlattened = graphite.flatten(data);
+        Object.keys(dataFlattened).forEach(function(metric) {
+            console.log('%s: %s', metric, dataFlattened[metric]);
+        });
+        cb(null);
+    } else if (graphiteClient) {
         graphiteClient.write(data, function(err) {
             cb(err);
         });
@@ -241,7 +249,9 @@ function loop() {
                 errorScore--;
             }
 
-            if (cursor) {
+            if (graphiteDebug) {
+                console.log(chronolog(summarize(metrics)));
+            } else if (cursor) {
                 if (lastDate.getSeconds() == 0) {
                     console.log();
                 }
