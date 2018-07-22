@@ -15,7 +15,7 @@ var ansi      = require('ansi'),
     sysconf   = require('sysconf'),
     tty       = require('tty');
 
-var hostname   = os.hostname(),
+var hostname   = os.hostname().replace( /\./g, '_' ),
     cursor     = (tty.isatty(1) ? ansi(process.stdout) : null),
     errorScore = 0,
     lastDate   = new Date,
