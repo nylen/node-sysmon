@@ -11,6 +11,7 @@ if (!config.memInfoInclude) {
         Cached       : true,
         SwapCached   : true,
         Active       : true,
+        Inactive     : true,
         SwapTotal    : true,
         SwapFree     : true,
         Mapped       : true,
