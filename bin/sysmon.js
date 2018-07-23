@@ -2,6 +2,7 @@
 
 var ansi      = require('ansi'),
     async     = require('async'),
+    bigInt    = require('big-integer'),
     chronolog = require('chronolog'),
     clone     = require('clone'),
     config    = require('../config'),
@@ -20,6 +21,7 @@ var hostname   = os.hostname().replace( /\./g, '_' ),
     errorScore = 0,
     lastDate   = new Date,
     lastCPU    = {},
+    lastNet    = {},
     clockHz    = sysconf.get(sysconf._SC_CLK_TCK),
     log        = chronolog(console);
 
@@ -148,7 +150,49 @@ function getMetrics(cb) {
             }, function(err) {
                 nextMetric(err, fsMetrics);
             });
-        }
+        },
+
+        net : function(nextMetric) {
+            var netMetrics = {};
+            async.forEach(config.net, function(iface, nextIface) {
+                netMetrics[iface] = {};
+                async.forEach(['rx', 'tx'], function(stat, nextStat) {
+                    fs.readFile(
+                        '/sys/class/net/' + iface
+                        + '/statistics/' + stat + '_bytes',
+                        'utf8',
+                        function(err, data) {
+                            var now, value, last;
+
+                            if (err) {
+                                return nextStat(err);
+                            }
+
+                            if (!lastNet[iface]) {
+                                lastNet[iface] = {};
+                            }
+                            now   = new Date / 1000;
+                            value = bigInt(data.trim());
+                            last  = lastNet[iface][stat];
+                            if (last) {
+                                netMetrics[iface][stat + '_bytes_per_sec'] =
+                                    value.subtract(last.value).toJSNumber()
+                                    / (now - last.date);
+                            }
+                            lastNet[iface][stat] = {
+                                date  : now,
+                                value : value,
+                            };
+                            nextStat(null);
+                        }
+                    );
+                }, function(err) {
+                    nextIface(err);
+                });
+            }, function(err) {
+                nextMetric(err, netMetrics);
+            });
+        },
 
     }, function(err, metrics) {
         cb(err, metrics);
@@ -212,14 +256,26 @@ function summarize(metrics) {
                 }, 0);
                 return 'df=' + filesize(free, { unix : true });
 
+            case 'net':
+                var speed = Object.keys(metrics.net).reduce(function(sum, iface) {
+                    return {
+                        rx: sum.rx + (metrics.net[iface].rx_bytes_per_sec || 0),
+                        tx: sum.tx + (metrics.net[iface].tx_bytes_per_sec || 0),
+                    };
+                }, { rx : 0, tx : 0 });
+                return (
+                    filesize(speed.rx, { unix : true }) + 'u/' +
+                    filesize(speed.tx, { unix : true }) + 'd'
+                );
+
             default:
                 throw new Error('Unhandled metric type in summarize(): ' + k);
-
         }
     }).join(' ');
 
-    if (summary.length > 50) {
-        summary = summary.substring(0, 47) + '...';
+    var maxLen = 64;
+    if (summary.length > maxLen) {
+        summary = summary.substring(0, maxLen - 3) + '...';
     }
 
     return summary;

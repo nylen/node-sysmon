@@ -45,6 +45,10 @@ if (!config.fs) {
     config.fs = { root: '/' };
 }
 
+if (!Array.isArray(config.net)) {
+    config.net = [];
+}
+
 if (config.graphite && config.graphite.debug) {
     console.warn("WARNING: Graphite debug mode - no live data will be sent");
 }
