@@ -104,6 +104,10 @@ function getMetrics(cb) {
                     for (var k in cpuMetrics.cpu) {
                         cpuMetrics.cpu[k] /= cpuCount;
                     }
+                    for (var k in cpuMetrics) {
+                        cpuMetrics[k]._usage =
+                            1 - cpuMetrics[k].idle - cpuMetrics[k].iowait;
+                    }
                     nextMetric(null, cpuMetrics);
                 });
         },
@@ -193,7 +197,7 @@ function summarize(metrics) {
             case 'cpu':
                 var cpu = metrics.cpu.cpu;
                 if (cpu) {
-                    cpu = '   ' + Math.round(100 * (1 - cpu.idle - cpu.iowait));
+                    cpu = '   ' + Math.round(100 * cpu._usage);
                     return 'cpu=' + cpu.substring(cpu.length - 3) + '%';
                 } else {
                     return 'cpu=????';
