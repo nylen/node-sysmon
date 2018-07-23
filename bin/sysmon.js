@@ -23,7 +23,8 @@ var hostname   = os.hostname().replace( /\./g, '_' ),
     lastCPU    = {},
     lastNet    = {},
     clockHz    = sysconf.get(sysconf._SC_CLK_TCK),
-    log        = chronolog(console);
+    log        = chronolog(console),
+    timeoutId  = null;
 
 var graphiteDebug = config.graphite && config.graphite.debug;
 var graphiteClient = (
@@ -285,7 +286,13 @@ function loop() {
     function nextLoop() {
         lastDate = new Date;
         var ms = +lastDate % 1000;
-        setTimeout(loop, 1000 - ms);
+        // Sometimes we get multiple errors, which means we need to avoid
+        // running multiple loops at the same time.  This is probably a bug in
+        // 'graphite' but it seems easiest to just avoid it here.
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+        }
+        timeoutId = setTimeout(loop, 1000 - ms);
     }
 
     function error(err) {
