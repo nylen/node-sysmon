@@ -108,8 +108,10 @@ function getMetrics(cb) {
                         cpuMetrics.cpu[k] /= cpuCount;
                     }
                     for (var k in cpuMetrics) {
-                        cpuMetrics[k]._usage =
-                            1 - cpuMetrics[k].idle - cpuMetrics[k].iowait;
+                        if (/^cpu\d*$/.test(k)) {
+                            cpuMetrics[k]._usage =
+                                1 - cpuMetrics[k].idle - cpuMetrics[k].iowait;
+                        }
                     }
                     nextMetric(null, cpuMetrics);
                 });
